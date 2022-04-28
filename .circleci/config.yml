@@ -4,7 +4,6 @@ jobs:
   build-and-test:
     machine:
       image: android:202102-01
-    
     steps:
     - checkout
     - run:
