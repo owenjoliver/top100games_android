@@ -1,5 +1,4 @@
-# Orb 'circleci/android@1.0.3' resolved to 'circleci/android@1.0.3'
-version: 2
+version: 2.1
 jobs:
   build-and-test:
     machine:
@@ -89,4 +88,3 @@ workflows:
   sample:
     jobs:
     - build-and-test
-  version: 2
