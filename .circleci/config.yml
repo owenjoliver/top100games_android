@@ -20,12 +20,12 @@ jobs:
 
       - run:
           name: Chmod permissions #if permission for Gradlew Dependencies fail, use this.
-          command: chmod +x ./gradlew
+          command: chmod +x ~/project/gradlew
       - run:
           name: Download Dependencies
-          command: ./gradlew androidDependencies
+          command: ~/project/gradlew androidDependencies
 
       - save_cache:
           paths:
-            - ~/.gradle
+            - ~/project/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
