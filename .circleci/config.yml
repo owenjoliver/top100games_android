@@ -19,7 +19,6 @@ jobs:
           background: true
           command: |
             mkdir ~/logcat/
-            chmod 644 ~/logcat/
             adb logcat *:I -f ~/logcat/logcat.txt
 
       # Download and cache dependencies
