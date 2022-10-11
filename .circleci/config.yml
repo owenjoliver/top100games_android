@@ -42,4 +42,4 @@ jobs:
           key: v1-dependencies-{{ checksum "build.gradle" }}
       
       - run: ls /tmp/
-      - run: cat tmp/*.log
+      - run: cat /tmp/*.log
