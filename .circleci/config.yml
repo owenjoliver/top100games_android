@@ -19,7 +19,6 @@ jobs:
           background: true
           command: |
             adb logcat *:I -f /tmp/logcat.txt
-      - run: ls /tmp
 
       # Download and cache dependencies
       - restore_cache:
@@ -36,3 +35,5 @@ jobs:
           paths:
             - ~/project/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
+      
+      - run: ls /tmp
