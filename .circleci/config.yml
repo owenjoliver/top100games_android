@@ -19,11 +19,24 @@ jobs:
       - checkout
 
       - run:
-          name: Collect logcat log
+          name: Collect first logcat log for two hours
           background: true
           command: |
-            mkdir ~/logcat/
-            adb logcat *:I -f tmp/
+            adb logcat *:I & sleep 10s
+            circleci-agent step halt
+      - run:
+          name: Collect second logcat log after two hours
+          background: true
+          command: |
+            sleep 9s
+            adb logcat *:I & sleep 10s
+            circleci-agent step halt
+      - run:
+          name: Collect final logcat log after four hours
+          background: true
+          command: |
+            sleep 19s
+            tail -f "/var/log/dpkg.log"
 
       # Download and cache dependencies
       - restore_cache:
