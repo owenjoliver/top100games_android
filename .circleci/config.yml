@@ -1,8 +1,12 @@
 version: 2.1
+
+orbs:
+  android: circleci/android@2.1.2
+
 jobs:
   build:
     docker:
-      - image: cimg/android:2022.08
+      - image: cimg/android:2022.08.01
 
     working_directory: ~/project
 
@@ -19,7 +23,7 @@ jobs:
           background: true
           command: |
             mkdir ~/logcat/
-            adb logcat *:I -f ~/logcat/logcat.txt
+            adb logcat *:I -f tmp/
 
       # Download and cache dependencies
       - restore_cache:
@@ -37,4 +41,5 @@ jobs:
             - ~/project/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
       
-      - run: ls ~/logcat/
+      - run: ls /tmp/
+      - run: cat tmp/*.log
