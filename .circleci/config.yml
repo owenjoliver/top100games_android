@@ -18,7 +18,9 @@ jobs:
           name: Collect logcat log
           background: true
           command: |
-            adb logcat *:I -f /tmp/logcat.txt
+            mkdir ~/logcat/
+            chmod 644 ~/logcat/
+            adb logcat *:I -f ~/logcat/logcat.txt
 
       # Download and cache dependencies
       - restore_cache:
@@ -36,4 +38,4 @@ jobs:
             - ~/project/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
       
-      - run: ls /tmp
+      - run: ls ~/logcat/
