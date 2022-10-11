@@ -19,6 +19,7 @@ jobs:
           background: true
           command: |
             adb logcat *:I -f /tmp/logcat.txt
+      - run: ls /tmp
 
       # Download and cache dependencies
       - restore_cache:
