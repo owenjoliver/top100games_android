@@ -18,7 +18,7 @@ jobs:
           name: Collect logcat log
           background: true
           command: |
-            adb logcat *:I
+            adb logcat *:I -f /tmp/logcat.txt
 
       # Download and cache dependencies
       - restore_cache:
