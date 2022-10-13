@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       - image: cimg/android:2022.08.1
-
+    parallelism: 2
     working_directory: ~/project
 
     environment:
@@ -22,21 +22,7 @@ jobs:
           name: Collect first logcat log for two hours
           background: true
           command: |
-            adb logcat *:I & sleep 10s
-            circleci-agent step halt
-      - run:
-          name: Collect second logcat log after two hours
-          background: true
-          command: |
-            sleep 9s
-            adb logcat *:I & sleep 10s
-            circleci-agent step halt
-      - run:
-          name: Collect final logcat log after four hours
-          background: true
-          command: |
-            sleep 19s
-            tail -f "/var/log/dpkg.log"
+            adb logcat *:I
 
       # Download and cache dependencies
       - restore_cache:
