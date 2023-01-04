@@ -93,7 +93,6 @@ jobs:
           PARAM_OVERRIDE_ARGS: ''
           PARAM_VERBOSE: true
         name: Start emulator
-    - run: adb shell screenrecord --time-limit 180 /sdcard/example.mp4
     - run:
         command: "#!/bin/bash\necho \"The following are the files used to generate the cache checksum:\"\neval find \"${PARAM_FIND_ARGS}\"\neval find \"${PARAM_FIND_ARGS}\" | sort | xargs cat |\nshasum | awk '{print $1}' > /tmp/gradle_cache_seed \n"
         environment:
@@ -119,6 +118,7 @@ jobs:
           adb shell settings put global transition_animation_scale 0.0
           adb shell settings put global animator_duration_scale 0.0
         name: Disable emulator animations
+    - run: adb shell screenrecord --time-limit 180 /sdcard/example.mp4
     - run:
         command: |-
           #!/bin/bash
