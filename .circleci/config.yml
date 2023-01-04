@@ -150,7 +150,12 @@ jobs:
         - ~/.gradle/caches
         - ~/.gradle/wrapper
     - run:
-        command: adb shell screencap -p /sdcard/screen.png
+        command: 
+            mkdir ~/screenshots
+            adb shell screencap -p /sdcard/screen.png
+            adb pull /sdcard/screen.png ~/screenshots/screen.png
+    - store_artifacts:
+        path: ~/screenshots
     - run:
         command: |-
           #!/bin/bash
