@@ -152,7 +152,9 @@ jobs:
     - run: mkdir ~/screenshots
     - run:
         command:
-            adb shell screencap -p ~/screenshots/screen.png
+            adb shell screencap -p /sdcard/screencap.png && adb pull /sdcard/screencap.png
+    - run: ls ~
+    - run: cp screencap.png ~/screenshots
     - store_artifacts:
         path: ~/screenshots
     - run:
