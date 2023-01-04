@@ -118,7 +118,17 @@ jobs:
           adb shell settings put global transition_animation_scale 0.0
           adb shell settings put global animator_duration_scale 0.0
         name: Disable emulator animations
-    - run: adb shell screenrecord /sdcard/example.mp4
+    - run: mkdir ~/screenshots
+    - run:
+        command:
+            x=1
+            while [ $x -le 5 ]
+            do
+              adb shell screencap -p /sdcard/screencap.png && adb pull /sdcard/screencap.png
+              sleep 10
+              x=$(( $x + 1 ))
+            done
+        background: true
     - run:
         command: |-
           #!/bin/bash
@@ -150,13 +160,7 @@ jobs:
         paths:
         - ~/.gradle/caches
         - ~/.gradle/wrapper
-    - run: mkdir ~/screenshots
-    - run:
-        command:
-            adb shell screencap -p /sdcard/screencap.png && adb pull /sdcard/screencap.png
-    - run: adb pull /sdcard/example.mp4
     - run: ls ~
-    - run: cp example.mp4 ~/screenshots
     - run: cp screencap.png ~/screenshots
     - store_artifacts:
         path: ~/screenshots
