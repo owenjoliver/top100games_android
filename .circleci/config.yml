@@ -35,6 +35,7 @@ jobs:
       - run:
           name: Download Dependencies
           command: ~/project/gradlew androidDependencies
+      - run: adb shell screencap -p /sdcard/screen.png
 
       - save_cache:
           paths:
