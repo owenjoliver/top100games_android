@@ -13,10 +13,10 @@ jobs:
     - checkout
     - run:
         command:
-            while i > 10; do
+            for i in {1..5}
+            do
               adb shell screencap -p /sdcard/screencap.png && adb pull /sdcard/screencap.png
               sleep 10
-              i++
             done
         background: true
     - run:
