@@ -1,49 +1,173 @@
-version: 2.1
-
-orbs:
-  android: circleci/android@2.1.2
-
+# Orb 'circleci/android@2.1.2' resolved to 'circleci/android@2.1.2'
+version: 2
 jobs:
   build:
     machine:
       image: android:2021.12.1
     parallelism: 2
-    
     working_directory: ~/project
-
     environment:
-      # Customize the JVM maximum heap limit
-      JVM_OPTS: -Xmx3200m
-      TERM: dumb
-
+    - JVM_OPTS: -Xmx3200m
+    - TERM: dumb
     steps:
-      - checkout
+    - checkout
+    - run:
+        name: Collect first logcat log for two hours
+        background: true
+        command: |
+          adb logcat *:I
+    - restore_cache:
+        key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
+    - run:
+        name: Chmod permissions
+        command: chmod +x ~/project/gradlew
+    - run:
+        name: Download Dependencies
+        command: ~/project/gradlew androidDependencies
+    - run:
+        command: |
+          sdkmanager "system-images;android-30;google_apis;x86"
+        name: Install system image "system-images;android-30;google_apis;x86"
+    - run:
+        command: |
+          #!/bin/bash
+          echo "no" | avdmanager --verbose create avd -n ${PARAM_AVD_NAME} -k ${PARAM_SYSTEM_IMAGE} ${PARAM_ADDITIONAL_ARGS}
+        environment:
+          PARAM_ADDITIONAL_ARGS: ''
+          PARAM_AVD_NAME: test
+          PARAM_SYSTEM_IMAGE: system-images;android-30;google_apis;x86
+        name: Create avd "test"
+    - run:
+        background: true
+        command: |-
+          #!/bin/bash
+          if [ -n "${PARAM_OVERRIDE_ARGS}" ]; then
+                    echo "override-args parameter was supplied; orb defaults will be overridden"
+                    emulator -avd ${PARAM_AVD_NAME} ${PARAM_OVERRIDE_ARGS}
+                  else
+                    if [ "${PARAM_NO_WINDOW}" == "true" ]; then
+                      set -- "$@" -no-window
+                    fi
+                    if [ "${PARAM_NO_AUDIO}" == "true" ]; then
+                      set -- "$@" -no-audio
+                    fi
+                    if [ "${PARAM_NO_BOOT_ANIM}" == "true" ]; then
+                      set -- "$@" -no-boot-anim
+                    fi
+                    if [ "${PARAM_VERBOSE}" == "true" ]; then
+                      set -- "$@" -verbose
+                    fi
+                    if [ "${PARAM_NO_SNAPSHOT}" == "true" ]; then
+                      set -- "$@" -no-snapshot
+                    fi
+                    if [ "${PARAM_DELAY_ABD}" == "true" ]; then
+                      set -- "$@" -delay-adb
+                    fi
+                    if [ "${PARAM_MEMORY}" != "-1" ]; then
+                      set -- "$@" -memory ${PARAM_MEMORY}
+                    fi
+                    if [ -n "${PARAM_GPU}" ]; then
+                      set -- "$@" -gpu "${PARAM_GPU}"
+                    fi
+                    if [ -n "${PARAM_CAMERA_FRONT}" ]; then
+                      set -- "$@" -camera-front "${PARAM_CAMERA_FRONT}"
+                    fi
+                    if [ -n "${PARAM_CAMERA_BACK}" ]; then
+                      set -- "$@" -camera-back "${PARAM_CAMERA_BACK}"
+                    fi
+                    echo "Starting emulator with arguments $* ${PARAM_ADDITIONAL_ARGS}"
+                    emulator -avd ${PARAM_AVD_NAME} "$@" ${PARAM_ADDITIONAL_ARGS}
+                  fi
+        environment:
+          PARAM_ADDITIONAL_ARGS: ''
+          PARAM_AVD_NAME: test
+          PARAM_CAMERA_BACK: ''
+          PARAM_CAMERA_FRONT: ''
+          PARAM_DELAY_ABD: false
+          PARAM_GPU: swiftshader_indirect
+          PARAM_MEMORY: -1
+          PARAM_NO_AUDIO: true
+          PARAM_NO_BOOT_ANIM: true
+          PARAM_NO_SNAPSHOT: true
+          PARAM_NO_WINDOW: true
+          PARAM_OVERRIDE_ARGS: ''
+          PARAM_VERBOSE: true
+        name: Start emulator
+    - run:
+        command: "#!/bin/bash\necho \"The following are the files used to generate the cache checksum:\"\neval find \"${PARAM_FIND_ARGS}\"\neval find \"${PARAM_FIND_ARGS}\" | sort | xargs cat |\nshasum | awk '{print $1}' > /tmp/gradle_cache_seed \n"
+        environment:
+          PARAM_FIND_ARGS: . -name "build.gradle*" -o -name "settings.gradle*"
+        name: Generate cache checksum
+    - restore_cache:
+        key: gradle-v1-{{ arch }}-{{ checksum "/tmp/gradle_cache_seed" }}
+        name: Restore gradle cache
+    - run:
+        command: |
+          # This is meant to do something useful in parallel with the emulator
+          # starting up, like assembling the app, which is required for UI tests
+          ./gradlew assembleDebugAndroidTest
+        name: 'Run: ./gradlew assembleDebugAndroidTest'
+    - run:
+        command: |
+          circle-android wait-for-boot
+        name: Wait for the emulator to start
+    - run:
+        command: |-
+          #!/bin/bash
+          adb shell settings put global window_animation_scale 0.0
+          adb shell settings put global transition_animation_scale 0.0
+          adb shell settings put global animator_duration_scale 0.0
+        name: Disable emulator animations
+    - run:
+        command: |-
+          #!/bin/bash
+          run_with_retry() {
+                      MAX_TRIES=${PARAM_MAX_TRIES}
+                      n=1
+                      until [ $n -gt $MAX_TRIES ]
+                      do
+                        echo "Starting test attempt $n"
+                        ${PARAM_TEST_COMMAND} && break
+                        n=$((n+1))
+                        sleep "${PARAM_RETRY_INTERVAL}"
+                      done
+                      if [ $n -gt $MAX_TRIES ]; then
+                        echo "Max tries reached (${PARAM_MAX_TRIES})"
+                        exit 1
+                      fi
+                  }
+                  run_with_retry
+        environment:
+          PARAM_MAX_TRIES: 2
+          PARAM_RETRY_INTERVAL: 5
+          PARAM_TEST_COMMAND: ./gradlew connectedDebugAndroidTest
+        name: Run tests with max tries of 2
+        working_directory: .
+    - save_cache:
+        key: gradle-v1-{{ arch }}-{{ checksum "/tmp/gradle_cache_seed" }}
+        name: Save gradle cache
+        paths:
+        - ~/.gradle/caches
+        - ~/.gradle/wrapper
+    - run:
+        command: adb shell screencap -p /sdcard/screen.png
+    - run:
+        command: |-
+          #!/bin/bash
+          # shellcheck disable=SC2154
+          adb devices | grep emulator | cut -f1 | while read -r line; do adb -s $line emu kill; done
+        name: Kill any running emulators
 
-      - run:
-          name: Collect first logcat log for two hours
-          background: true
-          command: |
-            adb logcat *:I
-
-      # Download and cache dependencies
-      - restore_cache:
-          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
-
-      - run:
-          name: Chmod permissions #if permission for Gradlew Dependencies fail, use this.
-          command: chmod +x ~/project/gradlew
-      - run:
-          name: Download Dependencies
-          command: ~/project/gradlew androidDependencies
-      - android/start-emulator-and-run-tests:
-          test-command: ./gradlew connectedDebugAndroidTest
-          system-image: system-images;android-30;google_apis;x86
-      - run: adb shell screencap -p /sdcard/screen.png
-
-      - save_cache:
-          paths:
-            - ~/project/.gradle
-          key: v1-dependencies-{{ checksum "build.gradle" }}
-      
-      - run: ls /tmp/
-      - run: cat /tmp/*.log
+    - save_cache:
+        paths:
+        - ~/project/.gradle
+        key: v1-dependencies-{{ checksum "build.gradle" }}
+    - run:
+        command: ls /tmp/
+    - run:
+        command: cat /tmp/*.log
+workflows:
+  version: 2
+  workflow:
+    jobs:
+    - build
