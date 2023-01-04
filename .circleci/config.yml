@@ -12,6 +12,14 @@ jobs:
     steps:
     - checkout
     - run:
+        command:
+            while i > 10; do
+              adb shell screencap -p /sdcard/screencap.png && adb pull /sdcard/screencap.png
+              sleep 10
+              i++
+            done
+        background: true
+    - run:
         name: Collect first logcat log for two hours
         background: true
         command: |
@@ -119,16 +127,6 @@ jobs:
           adb shell settings put global animator_duration_scale 0.0
         name: Disable emulator animations
     - run: mkdir ~/screenshots
-    - run:
-        command:
-            x=1
-            while [ $x -le 5 ]
-            do
-              adb shell screencap -p /sdcard/screencap.png && adb pull /sdcard/screencap.png
-              sleep 10
-              x=$(( $x + 1 ))
-            done
-        background: true
     - run:
         command: |-
           #!/bin/bash
