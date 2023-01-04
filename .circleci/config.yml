@@ -35,6 +35,9 @@ jobs:
       - run:
           name: Download Dependencies
           command: ~/project/gradlew androidDependencies
+      - android/start-emulator-and-run-tests:
+          test-command: ./gradlew connectedDebugAndroidTest
+          system-image: system-images;android-30;google_apis;x86
       - run: adb shell screencap -p /sdcard/screen.png
 
       - save_cache:
