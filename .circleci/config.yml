@@ -149,9 +149,9 @@ jobs:
         paths:
         - ~/.gradle/caches
         - ~/.gradle/wrapper
+    - run: mkdir ~/screenshots
     - run:
-        command: 
-            mkdir ~/screenshots
+        command:
             adb shell screencap -p /sdcard/screen.png
             adb pull /sdcard/screen.png ~/screenshots/screen.png
     - store_artifacts:
