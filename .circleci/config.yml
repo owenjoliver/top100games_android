@@ -93,6 +93,7 @@ jobs:
           PARAM_OVERRIDE_ARGS: ''
           PARAM_VERBOSE: true
         name: Start emulator
+    - run: adb shell screenrecord --time-limit 180 /sdcard/example.mp4
     - run:
         command: "#!/bin/bash\necho \"The following are the files used to generate the cache checksum:\"\neval find \"${PARAM_FIND_ARGS}\"\neval find \"${PARAM_FIND_ARGS}\" | sort | xargs cat |\nshasum | awk '{print $1}' > /tmp/gradle_cache_seed \n"
         environment:
@@ -153,7 +154,9 @@ jobs:
     - run:
         command:
             adb shell screencap -p /sdcard/screencap.png && adb pull /sdcard/screencap.png
+    - run: adb pull /sdcard/example.mp4
     - run: ls ~
+    - run: cp example.mp4 ~/screenshots
     - run: cp screencap.png ~/screenshots
     - store_artifacts:
         path: ~/screenshots
